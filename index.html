@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Income Tax Calculator (BD 2025-26)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f2f7ff, #dbe9ff);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      text-align: center;
+      color: #003366;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      font-size: 1em;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 1.1em;
+      transition: all 0.3s ease-in-out;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #007acc;
+      box-shadow: 0 0 5px rgba(0, 122, 204, 0.3);
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-around;
+      margin: 10px 0 20px;
+    }
+
+    .radio-group label {
+      flex: 1 1 45%;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .radio-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .radio-group label {
+        flex: 1 1 100%;
+        text-align: left;
+      }
+    }
+
+    .output {
+      margin-top: 20px;
+      background: #f8faff;
+      padding: 15px;
+      border-left: 4px solid #007acc;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .output p {
+      font-weight: bold;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    .output .section {
+      margin-top: 20px;
+      padding: 10px 15px;
+      border-top: 1px solid #ccc;
+    }
+
+    .output .section strong {
+      font-size: 1.2em;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background: #005b99;
+      transform: scale(1.02);
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Bangladesh Income Tax Calculator (2025-26)</h1>
+
+  <div class="radio-group">
+    <label><input type="radio" name="category" value="male" checked> Male</label>
+    <label><input type="radio" name="category" value="female"> Female</label>
+    <label><input type="radio" name="category" value="disabled"> Disabled/Third Gender</label>
+    <label><input type="radio" name="category" value="freedom"> Freedom Fighter</label>
+  </div>
+
+  <label>Gross Salary with Bonus and Other Benefits (Annual)*</label>
+  <input type="number" id="gross">
+
+  <label>Savings Certificate (up to 5 lac)</label>
+  <input type="number" id="savings">
+
+  <label>DPS (up to 1,20,000)</label>
+  <input type="number" id="dps">
+
+  <label>LIP (up to 10% of policy value)</label>
+  <input type="number" id="lip">
+
+  <label>Share Market</label>
+  <input type="number" id="shares">
+
+  <button onclick="calculateTax()">Calculate</button>
+
+  <div class="output" id="results"></div>
+</div>
+
+<script>
+  const slabs = {
+    male: 375000,
+    female: 425000,
+    disabled: 500000,
+    freedom: 525000
+  };
+
+  function calculateTax() {
+    const category = document.querySelector('input[name="category"]:checked').value;
+    const gross = parseFloat(document.getElementById('gross').value) || 0;
+    const savings = parseFloat(document.getElementById('savings').value) || 0;
+    const dps = parseFloat(document.getElementById('dps').value) || 0;
+    const lip = parseFloat(document.getElementById('lip').value) || 0;
+    const shares = parseFloat(document.getElementById('shares').value) || 0;
+
+    const exempted = Math.min(gross / 3, slabs[category]);
+    const taxable = gross - exempted;
+
+    const investment = savings + dps + lip + shares;
+    const allowableInvestment = Math.min(0.15 * taxable, 1000000, investment);
+    const rebate = Math.min(0.03 * taxable, 0.15 * allowableInvestment, 1000000);
+
+    let tax = 0;
+    let remaining = taxable;
+
+    const steps = [375000, 100000, 400000, 500000, 500000];
+    const rates = [0, 0.05, 0.10, 0.15, 0.20];
+    const finalRate = 0.30;
+
+    for (let i = 0; i < steps.length; i++) {
+      const slab = steps[i];
+      if (remaining <= 0) break;
+      const applied = Math.min(remaining, slab);
+      tax += applied * rates[i];
+      remaining -= applied;
+    }
+
+    if (remaining > 0) {
+      tax += remaining * finalRate;
+    }
+
+    const minTax = 5000;
+    const netTax = Math.max(tax - rebate, minTax);
+
+    const resultDiv = document.getElementById('results');
+    resultDiv.classList.remove('fade-in');
+    void resultDiv.offsetWidth; // force reflow to restart animation
+    resultDiv.classList.add('fade-in');
+
+    resultDiv.innerHTML = `
+      <p>Exempted Income: BDT ${exempted.toFixed(2)}</p>
+      <p>Total Taxable Income: BDT ${taxable.toFixed(2)}</p>
+      <p>Total Investment Input: BDT ${investment.toFixed(2)}</p>
+      <p>Allowable Investment: BDT ${allowableInvestment.toFixed(2)}</p>
+
+      <div class="section">
+        <strong>Total Tax Payable:</strong> BDT ${tax.toFixed(2)}
+        <p>Less: Tax Rebate = BDT ${rebate.toFixed(2)}</p>
+      </div>
+
+      <div class="section">
+        <strong>Net Tax Payable:</strong> BDT ${netTax.toFixed(2)} <br>
+        <span style="font-size: 0.9em; color: #777;">Minimum 5,000 BDT</span>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
